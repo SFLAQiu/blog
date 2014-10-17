@@ -3,7 +3,12 @@
 	var date=new Date(post.time);
  %>
 
-    <p><h2><a href="/u/<%=post.name%>/<%=post.title%>"><%=post.title%><a></a></h2></p>
+    <p>
+        <h2><a href="/u/<%=post.name%>/<%=post.title%>"><%=post.title%></a></h2>
+        <a href="/u/<%=post.name%>">
+            <img src="<%=post.head%>" class="r_head"/>
+        </a>
+    </p>
     <p class="info">
         作者:<a href="/u/<%=post.name%>"><%=post.name%></a>
         日期:<%=date.getFullYear()+"-"+date.getMonth()+"-"+date.getDay()+"  "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds()%>
@@ -14,9 +19,22 @@
         <a href="/tags/<%=tag%>"><%=tag%></a>
         <%   });
         %>
+        <% if (post.reprint_info.reprint_from) { %>
+        <br><a href="/u/<%= post.reprint_info.reprint_from.name %>/<%= post.reprint_info.reprint_from.title %>">原文链接</a>
+        <% } %>
     </p>
    
     <p><%- post.post%></p>
+   <p class="info">
+    阅读：<%= post.pv %> |
+    评论：<%= post.comments.length %> |
+    转载：
+    <% if (post.reprint_info.reprint_to) { %>
+    <%= post.reprint_info.reprint_to.length %>
+    <% } else { %>
+    <%= 0 %>
+    <% } %>
+    </p>
 <%});%>
 <%- include paging %>
 <%- include footer %>

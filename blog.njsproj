@@ -44,6 +44,7 @@
     <Content Include="public\javascripts\jquery-1.9.1.min.map" />
     <Content Include="public\stylesheets\style.css" />
     <Content Include="README.md" />
+    <Content Include="views\404.ejs" />
     <Content Include="views\archive.ejs" />
     <Content Include="views\comment.ejs" />
     <Content Include="views\edit.ejs" />
@@ -54,6 +55,7 @@
     <Content Include="views\login.ejs" />
     <Content Include="views\paging.ejs" />
     <Content Include="views\reg.ejs" />
+    <Content Include="views\search.ejs" />
     <Content Include="views\tag.ejs" />
     <Content Include="views\tags.ejs" />
     <Content Include="views\upload.ejs" />

@@ -128,6 +128,8 @@ module.exports = function (app) {
     app.get('/u/:name', function (req, res) {
         var loginUser = req.session.user;
         var selUserName = req.params.name;
+        var page = req.query.p?parseInt(req.query.p):1;
+        var pageSize = 5;
         if (!loginUser) { 
             req.flash('error', '用户不存在！');
             return res.redirect('/');
@@ -140,7 +142,7 @@ module.exports = function (app) {
             }
             var length = posts.length;
             res.render('index', {
-                title: "主页",
+                title: selUserName,
                 page: page,
                 isFirstPage: (page - 1) == 0,
                 isLastPage: ((page - 1) * pageSize + length) == total,
@@ -172,9 +174,56 @@ module.exports = function (app) {
             });
         },true);
     });
+    
+    //获取用详细的微博详情
+    app.post('/u/:name/:title', function (req, res) {
+        var date = new Date();
+        time = date;
+        var md5 = crypto.createHash('md5');
+        var email_MD5 = md5.update(req.body.email.toLowerCase()).digest('hex');
+        var head = "http://en.gravatar.com/avatar/" + email_MD5 + "?s=48";
+        var comment = {
+            name: req.body.name,
+            head:head,
+            email: req.body.email,
+            website: req.body.website,
+            time: time,
+            content: req.body.content
+        };
+        var newComment = new Comment(req.params.name, req.params.title, comment);
+        newComment.save(function (err) {
+            if (err) {
+                req.flash('error', err);
+                return res.redirect('back');
+            }
+            req.flash('success', '留言成功!');
+            return res.redirect('back');
+        });
+    });
+    //标题查询
+    app.get('/search', function (req, res) {
+        var title = req.query.keyword;
+        if (!title) { 
+            req.flash('error', '无');
+            return res.redirect('/');
+        }
+        Post.Search(title, function (err, posts) {
+            if (err) {
+                req.flash('error', err);
+                return res.redirect('/');
+            }
+            res.render('search', {
+                title:"SEARCH："+ title,
+                posts: posts,
+                user: req.session.user,
+                success: req.flash('success').toString(),
+                error: req.flash('error').toString()
+            });  
+        })
+    });
     //存档
     app.get('/archive', function (req, res ) {
-        Post.getArchive(function (err, posts) { 
+         Post.getArchive(function (err, posts) { 
             if (err) {
                 req.flash('error', err);
                 return res.redirect('back');
@@ -227,27 +276,7 @@ module.exports = function (app) {
         })
     });
 
-    //获取用详细的微博详情
-    app.post('/u/:name/:title', function (req, res) {
-        var date = new Date();
-        time = date;
-        var comment = {
-            name: req.body.name,
-            email: req.body.email,
-            website:req.body.website,
-            time:time,
-            content: req.body.content
-        };
-        var newComment = new Comment(req.params.name, req.params.title, comment);
-        newComment.save(function (err) { 
-            if (err) {
-                req.flash('error', err);
-                return res.redirect('back');
-            }
-            req.flash('success', '留言成功!');
-            return res.redirect('back');
-        });
-    });
+    
     //编辑
     app.get('/edit/:name/:title', checkLogin);
     app.get('/edit/:name/:title', function (req, res) {
@@ -336,7 +365,7 @@ module.exports = function (app) {
         var title = req.body.title;
         var post = req.body.post;
         var tags = [req.body.tag1,req.body.tag2,req.body.tag3];
-        var mPost = new Post(user.name, title, tags, post);
+        var mPost = new Post(user.name,user.head, title, tags, post);
         mPost.save(function (err) {
             if (err) {
                 req.flash('error', err);
@@ -353,7 +382,47 @@ module.exports = function (app) {
         req.flash('success', '登出成功！');
         res.redirect('/');
     });
+    //404
+    app.use(function (req, res) {
+        res.render("404");
+    });
+    //转载
+    app.get('/reprint/:name/:title', checkLogin);
+    app.get('/reprint/:name/:title', function (req, res) {
+        Post.getOne({
+            "name": req.params.name,
+            "title": req.params.title
+        }, function (err, post) {
+            if (err) {
+                req.flash('error', err);
+                return res.redirect('back');
+            }
+            var user = req.session.user;
+            var reprint_from = {
+                name: post.name,
+                time: post.time,
+                title: post.title
+            };
+            var reprint_to = {
+                name: user.name,
+                head:user.head
+            };
+            Post.reprint(reprint_from, reprint_to, function (err, post) {
+                if (err) {
+                    req.flash('error', err);
+                    return res.redirect('back');
+                }
+                req.flash('success', '转载成功！');
+                var url = '/u/' + post.name + '/' + post.title;
+                res.redirect(url);
+            });
+        }, true,false);
+    });
+
+
 };
+
+
 
 //帮助方法
 //判断是否登陆
