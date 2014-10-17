@@ -172,6 +172,7 @@ module.exports = function (app) {
             });
         },true);
     });
+    //存档
     app.get('/archive', function (req, res ) {
         Post.getArchive(function (err, posts) { 
             if (err) {
@@ -187,6 +188,45 @@ module.exports = function (app) {
             });
         })
     });
+    //标签列表
+    app.get('/tags', function (req, res) {
+        Post.getTags(function (err, tags) {
+            if (err) {
+                req.flash('error', err);
+                return res.redirect('/');
+            }
+            res.render('tags', {
+                title: "标签",
+                tags: tags,
+                user: req.session.user,
+                success: req.flash('success').toString(),
+                error: req.flash('error').toString()
+            });
+        });
+    });
+    //获取标签下的所有微博
+    app.get('/tags/:tag', function (req,res) {
+        var user = req.session.user;
+        var tag = req.params.tag;
+        if (!tag|| tag=='underfine') { 
+            req.flash('error', '错误操作！');
+            return res.redirect('/');
+        }
+        Post.getTag(tag, function (err, posts) { 
+            if(err) {
+                req.flash('error', err);
+                return res.redirect('/');
+            }
+            res.render('tag', {
+                title: "TAG:"+tag,
+                posts: posts,
+                user: req.session.user,
+                success: req.flash('success').toString(),
+                error: req.flash('error').toString()
+            });
+        })
+    });
+
     //获取用详细的微博详情
     app.post('/u/:name/:title', function (req, res) {
         var date = new Date();
@@ -295,7 +335,8 @@ module.exports = function (app) {
         var user = req.session.user;
         var title = req.body.title;
         var post = req.body.post;
-        var mPost = new Post(user.name, title, post);
+        var tags = [req.body.tag1,req.body.tag2,req.body.tag3];
+        var mPost = new Post(user.name, title, tags, post);
         mPost.save(function (err) {
             if (err) {
                 req.flash('error', err);

@@ -18,7 +18,6 @@ Comment.prototype.save = function (callback) {
                 mongodb.close();
                 return callback(err);
             }
-            
             collection.update({
                 "name": name,
                 "title": title
