@@ -1,0 +1,19 @@
+﻿<%- include header %>
+<form method='post' action="/upload" enctype="multipart/form-data">
+    <input id="addBtn" type="button" value="添加按钮" />
+    <div id="btnBox"></div>
+    <input type="submit" value="提交" />
+</form>
+<%- include footer %>
+<script type="text/javascript" src="javascripts/jquery-1.9.1.min.js"></script>
+<script type="text/javascript">
+    (function () {
+        $("#addBtn").click(function () {
+            var filebtnJqs = $(':file[name^="file"]');
+            var num = 1;
+            if (filebtnJqs && filebtnJqs.length > 0) num = filebtnJqs.length+1;
+            var btnHtml = '<input type="file"  name="file' + num + '"/><br/>';
+            $("#btnBox").append(btnHtml);
+        });
+    }());
+</script>
